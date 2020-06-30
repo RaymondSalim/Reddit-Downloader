@@ -13,10 +13,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 
 
 public class MainActivity extends AppCompatActivity {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,14 +29,17 @@ public class MainActivity extends AppCompatActivity {
 
         final redditDownloader redditDownloader = new redditDownloader(this);
 
-        final TextView textView = findViewById(R.id.url);
+
         Button download = findViewById(R.id.download);
+        final TextView textView = findViewById(R.id.url);
         download.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try {
                     redditDownloader.download(textView.getText().toString());
                 } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
