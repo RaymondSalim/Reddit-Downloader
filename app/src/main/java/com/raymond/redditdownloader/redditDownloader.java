@@ -15,6 +15,9 @@ import android.widget.Toast;
 
 import androidx.annotation.MainThread;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.*;
 
@@ -141,41 +144,31 @@ public class redditDownloader extends MainActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 response = httpClient.newCall(request).execute();
+                Gson gson = new Gson();
                 String jsonData = null;
                 jsonData = response.body().string();
 
                 try {
                     String fallbackURL = fallbackGrab(jsonData);
-
                     Log.d("fallbackURL", fallbackURL);
                     Log.d("fallBackURL", removePath(fallbackURL));
-
                     downloadVideo(fallbackURL, fileName);
-
                     Log.d("downloadVideo", "video downloaded");
-
                     ((MainActivity)context).downloadDialog.dismiss();
-                    ((MainActivity)context).runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "Video downloaded successfully", Toast.LENGTH_SHORT);
-                        }
-                    });
+                    // enableButton();
+
 
 
 
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
-
                     ((MainActivity)context).runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             Toast.makeText(context, "The reddit URL is invalid", Toast.LENGTH_SHORT).show();
                         }
                     });
-
                     enableButton();
-
                 } catch (IOException e) {
                     e.printStackTrace();
                     enableButton();
