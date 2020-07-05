@@ -24,8 +24,6 @@ import java.io.IOException;
 
 
 public class MainActivity extends AppCompatActivity {
-    public String saveDir;
-    TextView url;
     final Context context = this;
     public Dialog downloadDialog;
     private Thread download;
@@ -38,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         final redditDownloader redditDownloader = new redditDownloader(this);
-        TextView url = findViewById(R.id.urlDownload);
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -65,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams lp = new WindowManager.LayoutParams(); // TODO! Fix Dialog size
                 lp.copyFrom(downloadDialog.getWindow().getAttributes());
                 lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = WindowManager.LayoutParams.MATCH_PARENT;
+                lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
                 downloadDialog.getWindow().setAttributes(lp);
             }
         });

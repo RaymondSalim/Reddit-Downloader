@@ -15,14 +15,8 @@ import android.widget.Toast;
 
 import androidx.annotation.MainThread;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONStringer;
+import org.json.*;
 
 
 import java.io.BufferedOutputStream;
@@ -46,11 +40,10 @@ import okhttp3.*;
 
 public class redditDownloader extends MainActivity {
     private static Context context;
-    private static String redditRegex = "https?://(www.)?\\b(reddit.com|redd.it)\\b([/]?[r]?[/]?)?[-a-zA-Z0-9@:%._+~&?#/=]{1,256}";
+    private static String redditRegex = "https?://(www.)?\\b(reddit.com|redd.it)\\b\\b(/r/)\\b[-a-zA-Z0-9@:%._+~&?#/=]{1,512}";
     private static String urlRegex = "(https?://){1}[-a-zA-Z0-9@:%_+~&?#./=]{1,512}";
     private static final OkHttpClient httpClient = new OkHttpClient();
     private static String shareURL;
-    private static String downloadURL;
     private static File outputFile;
 
 
@@ -68,30 +61,43 @@ public class redditDownloader extends MainActivity {
         TextView textView = (TextView) ((MainActivity)context).downloadDialog.findViewById(R.id.urlDownload);
         if (isValid(textView.getText().toString())) {
             sendGET(urlInput, fileName);
-        }
+        } else enableButton();
     }
 
     public static boolean isValid(String url) throws MalformedURLException {
-
-        if (Looper.myLooper() == null) Looper.prepare();
         if (isMatch(url, urlRegex)) {
             try {
                 URL urlInput = new URL(url);
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-                Toast.makeText(context, "URL is invalid", Toast.LENGTH_SHORT).show();
+                ((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "URL is invalid", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 enableButton();
                 return false;
 
             }
             if (!isMatch(url, redditRegex)) {
-                Toast.makeText(context, "URL is not a reddit URL", Toast.LENGTH_SHORT).show();
+                ((MainActivity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "URL is not a reddit URL/post", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 enableButton();
                 return false;
             } else return true;
 
         } else if (url.length() == 0) {
-            Toast.makeText(context, "Please enter the URL", Toast.LENGTH_SHORT).show();
+            ((MainActivity)context).runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, "Please enter a URL", Toast.LENGTH_SHORT).show();
+                }
+            });
             Log.d("url", "is empty");
             enableButton();
             return false;
@@ -120,8 +126,9 @@ public class redditDownloader extends MainActivity {
 
     private static void sendGET(String url, final String fileName) throws IOException, InterruptedException {
 
+        Log.d("urlFinal", removePath(url));
         final Request request = new Request.Builder()
-                .url("https://reddit.tube/parse?url=" + url)
+                .url(removePath(url) + ".json")
                 .build();
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
@@ -134,30 +141,51 @@ public class redditDownloader extends MainActivity {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 response = httpClient.newCall(request).execute();
-                Gson gson = new Gson();
-                String jsonData = response.body().string();
+                String jsonData = null;
+                jsonData = response.body().string();
+
                 try {
-                    JSONObject jsonObject = new JSONObject(jsonData);
-                    Log.d("jsonResponse", jsonData);
-                    shareURL = jsonObject.getString("share_url");
-                    URLConnection urlConnection = new URL(shareURL).openConnection();
-                    urlConnection.connect();
-                    urlConnection.getInputStream();
-                    Log.d("URLCONNECTION", String.valueOf(urlConnection.getURL()));
-                    Log.d("replaceURL", replaceURL(urlConnection.getURL()));
-                    downloadURL = "https://cdntube2.b-cdn.net/mp4/" + replaceURL(urlConnection.getURL()) ; // Fix
-                    Log.d("downloadURL", downloadURL);
-                    downloadVideo(downloadURL, fileName);
+                    String fallbackURL = fallbackGrab(jsonData);
+
+                    Log.d("fallbackURL", fallbackURL);
+                    Log.d("fallBackURL", removePath(fallbackURL));
+
+                    downloadVideo(fallbackURL, fileName);
+
                     Log.d("downloadVideo", "video downloaded");
-                    // ((MainActivity)context).downloadDialog.dismiss();
+
+                    ((MainActivity)context).downloadDialog.dismiss();
+                    ((MainActivity)context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "Video downloaded successfully", Toast.LENGTH_SHORT);
+                        }
+                    });
 
 
 
-
-                } catch (JSONException e) {
-                    if (Looper.myLooper() == null) Looper.prepare();
+                } catch (MalformedURLException e) {
                     e.printStackTrace();
-                    Toast.makeText(context, "The reddit URL is invalid", Toast.LENGTH_SHORT).show();
+
+                    ((MainActivity)context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "The reddit URL is invalid", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    enableButton();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    enableButton();
+                } catch (JSONException e) {
+                    ((MainActivity)context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "There is no media in the reddit post", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     enableButton();
                 }
 
@@ -167,14 +195,7 @@ public class redditDownloader extends MainActivity {
     }
 
 
-    private static String replaceURL(URL url) throws MalformedURLException {
-        String temp =  (url.getPath().toString());
-        String[] split = temp.split("/");
-        return split[2];
-    }
-
     private static void downloadVideo(String url, String fileName) throws IOException {
-            // File currentFile = new File(String.valueOf(context.getExternalFilesDir(null) ) ); // TODO! Fix file saving location
         URL dwURL = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) dwURL.openConnection();
         connection.connect();
@@ -221,7 +242,15 @@ public class redditDownloader extends MainActivity {
         });
     }
 
+    private static String removePath(String url) {
+        return url.substring(0, url.indexOf("?"));
+    }
 
+    private static String fallbackGrab(String jsonData) throws JSONException {
+        JSONArray mainArray = new JSONArray(jsonData);
+        JSONArray children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
+        return children.getJSONObject(0).getJSONObject("data").getJSONObject("secure_media").getJSONObject("reddit_video").getString("fallback_url");
+    }
 
 
 
