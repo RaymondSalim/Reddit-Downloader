@@ -5,15 +5,20 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -25,63 +30,52 @@ import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     final Context context = this;
-    public Dialog downloadDialog;
-    private Thread download;
-
+    final Fragment fragmentDownload = new DownloadsFragment();
+    final Fragment fragmentHistory = new HistoryFragment();
+    final Fragment fragmentSettings = new SettingsFragment();
+    final FragmentManager fm = getSupportFragmentManager();
+    Fragment active = fragmentDownload;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        final redditDownloader redditDownloader = new redditDownloader(this);
+
+        // Fragments initialize
+        fm.beginTransaction().add(R.id.main_container, fragmentDownload, "1").commit();
+        fm.beginTransaction().add(R.id.main_container, fragmentHistory, "2").hide(fragmentHistory).commit();
+        fm.beginTransaction().add(R.id.main_container, fragmentSettings, "3").hide(fragmentSettings).commit();
 
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Dialog to request URL
-                downloadDialog = new Dialog(context);
-                downloadDialog.setContentView(R.layout.downloadalertdialog);
-                downloadDialog.setTitle("Download");
 
-
-                final Button downloadButton = (Button) downloadDialog.findViewById(R.id.downloadButton);
-                final TextView url = (TextView) downloadDialog.findViewById(R.id.urlDownload);
-                downloadButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        downloadButton.setEnabled(false);
-                        Log.d("url", url.getText().toString());
-                        download(url.getText().toString(), "name1231.mp4");
-                    }
-                });
-                downloadDialog.show();
-                WindowManager.LayoutParams lp = new WindowManager.LayoutParams(); // TODO! Fix Dialog size
-                lp.copyFrom(downloadDialog.getWindow().getAttributes());
-                lp.width = WindowManager.LayoutParams.MATCH_PARENT;
-                lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
-                downloadDialog.getWindow().setAttributes(lp);
-            }
-        });
+        // Bottom Nav Bar
+        BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottomNavBar);
+        bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
     }
 
-
-    private void download(final String url, final String fileName) {
-        // Runs on a thread to prevent error
-        download = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    redditDownloader.download(url, fileName);
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
+    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+            = new BottomNavigationView.OnNavigationItemSelectedListener() {
+        @Override
+        public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            switch (item.getItemId()) {
+                case R.id.action_downloads:
+                    fm.beginTransaction().hide(active).show(fragmentDownload).commit();
+                    active = fragmentDownload;
+                    item.setChecked(true);
+                    return true;
+                case R.id.action_history:
+                    fm.beginTransaction().hide(active).show(fragmentHistory).commit();
+                    active = fragmentHistory;
+                    item.setChecked(true);
+                    return true;
+                case R.id.action_settings:
+                    fm.beginTransaction().hide(active).show(fragmentSettings).commit();
+                    active = fragmentSettings;
+                    item.setChecked(true);
+                    return true;
                 }
-            }
-        });
-        download.start();
-    }
+            return false;
+        }
+    };
 
-}
+    }
