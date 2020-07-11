@@ -3,6 +3,7 @@ package com.raymond.redditdownloader;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -11,9 +12,14 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.preference.PreferenceManager;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Looper;
 import android.util.Log;
@@ -26,6 +32,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -36,21 +43,29 @@ public class MainActivity extends AppCompatActivity {
     final FragmentManager fm = getSupportFragmentManager();
     Fragment active = fragmentDownload;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         // Fragments initialize
-        fm.beginTransaction().add(R.id.main_container, fragmentDownload, "1").commit();
-        fm.beginTransaction().add(R.id.main_container, fragmentHistory, "2").hide(fragmentHistory).commit();
-        fm.beginTransaction().add(R.id.main_container, fragmentSettings, "3").hide(fragmentSettings).commit();
-
+        fm.beginTransaction().add(R.id.main_container, fragmentDownload, "fragmentDownload").commit();
+        fm.beginTransaction().add(R.id.main_container, fragmentHistory, "fragmentHistory").hide(fragmentHistory).commit();
+        fm.beginTransaction().add(R.id.main_container, fragmentSettings, "fragmentSettings").hide(fragmentSettings).commit();
+        fm.executePendingTransactions(); //
 
 
         // Bottom Nav Bar
         BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottomNavBar);
         bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+
+
+        // Theme
+        SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+        String themePref = settings.getString("theme", "");
+        setTheme(themePref);
     }
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -78,4 +93,20 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private void setTheme(String themeSetting) {
+        View view = getWindow().getDecorView();
+        switch (themeSetting) {
+            case "auto":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+            case "dark":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                view.setSystemUiVisibility(0); // Resets icon color in status bar to default
+                break;
+            case "light":
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR); // Sets windowLightStatusBar = true
+                break;
+        }
+    }
     }
