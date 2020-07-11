@@ -10,20 +10,18 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,21 +33,19 @@ import okhttp3.Response;
 
 
 public class redditDownloader extends MainActivity {
-    private static redditDownloader instance = null;
     private static Context context;
-    private static String redditRegex = "https?://(www.)?\\b(reddit.com|redd.it)\\b\\b(/r/)\\b[-a-zA-Z0-9@:%._+~&?#/=]{1,512}";
-    private static String urlRegex = "(https?://){1}[-a-zA-Z0-9@:%_+~&?#./=]{1,512}";
     private static final OkHttpClient httpClient = new OkHttpClient();
-    private static String shareURL;
     private static File outputFile;
     private static AppCompatActivity appCompatActivity;
-    private static DownloadsFragment fragment;
+    private static DownloadsFragment downloadsFragment;
+    private static HistoryFragment historyFragment;
 
 
     public redditDownloader(Context context) {
         this.context = context;
         appCompatActivity = (AppCompatActivity) context;
-        fragment = (DownloadsFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("1");
+        historyFragment = (HistoryFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentHistory");
+        downloadsFragment = (DownloadsFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentDownload");
 
     }
 
@@ -60,7 +56,7 @@ public class redditDownloader extends MainActivity {
 
     public static void download(String urlInput) throws IOException, InterruptedException {
         // DownloadsFragment fragment = (DownloadsFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("1");
-        TextView textView = fragment.downloadDialog.findViewById(R.id.urlDownload);
+        TextView textView = downloadsFragment.downloadDialog.findViewById(R.id.urlDownload);
 
         if (isValid(textView.getText().toString())) {
             sendGET(urlInput);
@@ -68,6 +64,9 @@ public class redditDownloader extends MainActivity {
     }
 
     public static boolean isValid(String url) throws MalformedURLException {
+        String redditRegex = "https?://(www.)?\\b(reddit.com|redd.it)\\b\\b(/r/)\\b[-a-zA-Z0-9@:%._+~&?#/=]{1,512}";
+        String urlRegex = "(https?://){1}[-a-zA-Z0-9@:%_+~&?#./=]{1,512}";
+
         if (isMatch(url, urlRegex)) {
             try {
                 URL urlInput = new URL(url);
@@ -120,6 +119,7 @@ public class redditDownloader extends MainActivity {
                 .build();
         Log.d("urlFinal", (url));
 
+        final String finalUrl = url;
         httpClient.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NotNull Call call, @NotNull IOException e) {
@@ -139,8 +139,8 @@ public class redditDownloader extends MainActivity {
                     String fallbackURL = fallbackGrab(jsonData);
                     String fileName = titleGrab(jsonData);
                     downloadVideo(fallbackURL, fileName);
-                    fragment.downloadDialog.dismiss();
-
+                    addToHistory(finalUrl);
+                    downloadsFragment.downloadDialog.dismiss();
 
 
 
@@ -198,7 +198,7 @@ public class redditDownloader extends MainActivity {
 
     private static void enableButton() {
         // DownloadsFragment fragment = (DownloadsFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("1");
-        final Button button = fragment.downloadDialog.findViewById(R.id.downloadButton);
+        final Button button = downloadsFragment.downloadDialog.findViewById(R.id.downloadButton);
 
         ((MainActivity)context).runOnUiThread(new Runnable() {
             @Override
@@ -210,7 +210,7 @@ public class redditDownloader extends MainActivity {
 
     private static void setURL(final String url) {
         // DownloadsFragment fragment = (DownloadsFragment) ((MainActivity)appCompatActivity).getSupportFragmentManager().findFragmentByTag("1");
-        final TextView textView = fragment.downloadDialog.findViewById(R.id.urlDownload);
+        final TextView textView = downloadsFragment.downloadDialog.findViewById(R.id.urlDownload);
 
         ((MainActivity)context).runOnUiThread(new Runnable() {
             @Override
@@ -243,6 +243,18 @@ public class redditDownloader extends MainActivity {
                 Toast.makeText(context, toast, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public static void addToHistory(String url) {
+        LinkedList<String> linkedList = historyFragment.mData;
+        int mDataSize = linkedList.size();
+        // Adds url to the list
+        linkedList.addLast(url);
+        // Notify the adapter that the data has changed
+        historyFragment.recyclerView.getAdapter().notifyItemInserted(mDataSize);
+        // Scrolls to the bottom
+        historyFragment.recyclerView.smoothScrollToPosition(mDataSize);
+
     }
 
 }
