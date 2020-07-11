@@ -51,6 +51,7 @@ public class DownloadsFragment extends Fragment {
                 downloadDialog.setTitle("Download");
                 final Button downloadButton = (Button) downloadDialog.findViewById(R.id.downloadButton);
                 final TextView url = (TextView) downloadDialog.findViewById(R.id.urlDownload);
+
                 downloadButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
