@@ -8,8 +8,15 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.LinkedList;
 
 public class HistoryFragment extends Fragment {
+    public RecyclerView recyclerView;
+    private RecyclerViewAdapter mAdapter;
+    public final LinkedList<String> mData = new LinkedList<>();
 
     @Override
     public View onCreateView(
@@ -22,13 +29,16 @@ public class HistoryFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        // RecyclerView Initialize
+        // Get a handle to the RecyclerView
+        recyclerView = view.findViewById(R.id.recyclerview);
+        // Create and supply data to be displayed
+        mAdapter = new RecyclerViewAdapter(getContext(), mData);
+        // Connect the adapter with the RecyclerView
+        recyclerView.setAdapter(mAdapter);
+        // Give the recyclerview a default layout manager
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        // TODO! Save history to sharedpreferences
 
-        view.findViewById(R.id.button_second).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(HistoryFragment.this)
-                        .navigate(R.id.action_SecondFragment_to_FirstFragment);
-            }
-        });
     }
 }
