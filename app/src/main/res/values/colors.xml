@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#6200EE</color>
-    <color name="colorPrimaryDark">#3700B3</color>
-    <color name="colorAccent">#03DAC5</color>
+    <color name="colorBackground">#FFFFFF</color> <!-- Used as background on Dark -->
+    <color name="colorStatusBar">#FFFFFF</color> <!-- Usage unknown -->
+    <color name="colorAccent">#919191</color> <!-- , FAB on Light & Dark -->
+    <color name="fabColor">#ff5622</color>
+    <color name="fabPlus">#FFFFFF</color>
+    <color name="bottomNavBar">#FFFFFF</color>
+    <color name="bottomNavBarSelected">#FF7043</color>
 </resources>

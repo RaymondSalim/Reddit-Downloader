@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorBackground">#121212</color> <!-- Used as background on Dark -->
+    <color name="colorStatusBar">#121212</color> <!-- Usage unknown -->
+    <color name="colorAccent">#919191</color> <!-- , FAB on Light & Dark -->
+    <color name="fabColor">#ff5622</color>
+    <color name="fabPlus">#15181e</color>
+    <color name="bottomNavBar">#232323</color>
+
+</resources>
