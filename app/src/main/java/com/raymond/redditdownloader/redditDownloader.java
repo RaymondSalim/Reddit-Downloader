@@ -2,6 +2,7 @@ package com.raymond.redditdownloader;
 
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,6 +41,7 @@ public class redditDownloader extends MainActivity {
     private static AppCompatActivity appCompatActivity;
     private static DownloadsFragment downloadsFragment;
     private static HistoryFragment historyFragment;
+
 
 
     public redditDownloader(Context context) {
@@ -246,10 +249,16 @@ public class redditDownloader extends MainActivity {
     }
 
     public static void addToHistory(String url) {
-        LinkedList<String> linkedList = historyFragment.mData;
+        SharedPreferences sharedPreferences = ((MainActivity)context).getSharedPreferences("history", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        Gson gson = new Gson();
+        LinkedList<String> linkedList = historyFragment.linkedList;
         int mDataSize = linkedList.size();
         // Adds url to the list
         linkedList.addLast(url);
+        String jsonText = gson.toJson(linkedList);
+        editor.putString("key", jsonText);
+        editor.apply();
         // Notify the adapter that the data has changed
         historyFragment.recyclerView.getAdapter().notifyItemInserted(mDataSize);
         // Scrolls to the bottom
