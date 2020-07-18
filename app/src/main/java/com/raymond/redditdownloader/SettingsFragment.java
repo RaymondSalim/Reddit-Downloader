@@ -1,6 +1,7 @@
 package com.raymond.redditdownloader;
 
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.Preference;
@@ -12,6 +13,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.root_preferences, rootKey);
+
         final Preference theme = findPreference("theme");
         theme.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
             @Override
@@ -30,9 +32,11 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 break;
             case "dark":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                getView().setSystemUiVisibility(0); // Resets icon color in status bar to default
                 break;
             case "light":
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                getView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR); // Sets windowLightStatusBar = true
                 break;
         }
     }
