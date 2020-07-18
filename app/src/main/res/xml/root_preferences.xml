@@ -3,11 +3,6 @@
 
     <PreferenceCategory app:title="@string/general_header">
 
-        <!--EditTextPreference
-            app:key="signature"
-            app:title="@string/signature_title"
-            app:useSimpleSummaryProvider="true" /> -->
-
         <ListPreference
             app:entries="@array/theme_entries"
             app:entryValues="@array/theme_values"
