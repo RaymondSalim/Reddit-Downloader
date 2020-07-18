@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +40,7 @@ public class redditDownloader extends MainActivity {
     private static AppCompatActivity appCompatActivity;
     private static DownloadsFragment downloadsFragment;
     private static HistoryFragment historyFragment;
+    private static Boolean isVideo = false;
 
 
 
@@ -137,13 +137,41 @@ public class redditDownloader extends MainActivity {
                 Gson gson = new Gson();
                 String jsonData = null;
                 jsonData = response.body().string();
+                JSONArray mainArray = null;
+                JSONArray children = null;
+                try {
+                    mainArray = new JSONArray(jsonData);
+                    children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
 
                 try {
-                    String fallbackURL = fallbackGrab(jsonData);
-                    String fileName = titleGrab(jsonData);
-                    downloadVideo(fallbackURL, fileName);
+                    if (isVideo(jsonData)) {
+                        String fallbackURL = fallbackGrab(children);
+                        String fileName = titleGrab(children);
+
+                        isVideo = true;
+
+                        downloadMedia(fallbackURL, fileName, isVideo);
+
+                    } else {
+                        String url = urlGrab(children);
+                        String fileName = titleGrab(children);
+
+                        downloadMedia(url, fileName, isVideo);
+
+                    }
                     addToHistory(finalUrl);
                     downloadsFragment.downloadDialog.dismiss();
+                    ((MainActivity)context).runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            downloadsFragment.notifyAdapter();
+
+                        }
+                    });
 
 
 
@@ -171,7 +199,7 @@ public class redditDownloader extends MainActivity {
     }
 
 
-    private static void downloadVideo(String url, String fileName) throws IOException {
+    private static void downloadMedia(String url, String fileName, Boolean isVideo) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -180,8 +208,12 @@ public class redditDownloader extends MainActivity {
         ContextWrapper contextWrapper = new ContextWrapper(context);
         File directory = contextWrapper.getExternalFilesDir(null);
 
-        outputFile = new File(directory, fileName + ".mp4");
-        Log.d("directory", String.valueOf(directory));
+        if (isVideo) {
+            outputFile = new File(directory, fileName + ".mp4");
+        } else {
+            outputFile = new File(directory, fileName + ".png");
+        }
+
 
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
         InputStream in = response.body().byteStream();
@@ -227,15 +259,15 @@ public class redditDownloader extends MainActivity {
         return url.substring(0, url.indexOf("?"));
     }
 
-    private static String fallbackGrab(String jsonData) throws JSONException {
-        JSONArray mainArray = new JSONArray(jsonData);
-        JSONArray children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
+    private static String fallbackGrab(JSONArray children) throws JSONException {
         return children.getJSONObject(0).getJSONObject("data").getJSONObject("secure_media").getJSONObject("reddit_video").getString("fallback_url");
     }
 
-    private static String titleGrab(String jsonData) throws JSONException {
-        JSONArray mainArray = new JSONArray(jsonData);
-        JSONArray children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
+    private static String urlGrab (JSONArray children) throws JSONException {
+        return children.getJSONObject(0).getJSONObject("data").getString("url_overridden_by_dest");
+    }
+
+    private static String titleGrab(JSONArray children) throws JSONException {
         return children.getJSONObject(0).getJSONObject("data").getString("title");
     }
 
@@ -251,8 +283,10 @@ public class redditDownloader extends MainActivity {
     public static void addToHistory(String url) {
         SharedPreferences sharedPreferences = ((MainActivity)context).getSharedPreferences("history", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        url = url.substring(url.indexOf("/r/"), url.length());
         Gson gson = new Gson();
         LinkedList<String> linkedList = historyFragment.linkedList;
+
         int mDataSize = linkedList.size();
         // Adds url to the list
         linkedList.addLast(url);
@@ -266,5 +300,11 @@ public class redditDownloader extends MainActivity {
 
     }
 
+    private static Boolean isVideo(String jsonData) throws JSONException {
+        JSONArray mainArray = new JSONArray(jsonData);
+        JSONArray children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
+        String isVideo = children.getJSONObject(0).getJSONObject("data").getString("is_video");
+        return Boolean.parseBoolean(isVideo);
+    }
 }
 
