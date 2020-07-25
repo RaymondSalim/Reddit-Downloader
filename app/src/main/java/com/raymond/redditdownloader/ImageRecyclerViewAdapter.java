@@ -1,17 +1,12 @@
 package com.raymond.redditdownloader;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.net.Uri;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.Display;
+import android.content.Intent;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
-import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,18 +15,17 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.target.Target;
-import com.google.gson.internal.$Gson$Preconditions;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadPoolExecutor;
 
 public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecyclerViewAdapter.ViewHolderImage> {
     private LayoutInflater inflater;
     private ArrayList<MediaObjects> mediaObjects;
     private Context context;
     private AppCompatActivity appCompatActivity;
+
+
 
     public ImageRecyclerViewAdapter(Context context, ArrayList<MediaObjects> mediaObjects) {
         this.context = context;
@@ -49,13 +43,31 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ImageRecyclerViewAdapter.ViewHolderImage holder, int position) {
+    public void onBindViewHolder(@NonNull ImageRecyclerViewAdapter.ViewHolderImage holder, final int position) {
         File file = new File(mediaObjects.get(position).getMediaPath());
         Glide
             .with(context)
             .load(file)
+            .error(R.drawable.ic_baseline_image_24)
             .fitCenter()
             .into(ViewHolderImage.img);
+
+        // Opens new activity to display image in fullscreen
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Bundle bundle = new Bundle();
+                bundle.putString("filePath", mediaObjects.get(position).getMediaPath());
+                bundle.putInt("position", position);
+
+
+                Intent intent = new Intent(context, MediaViewer.class);
+                intent.putExtras(bundle);
+                context.startActivity(intent);
+
+
+            }
+        });
 
     }
 
@@ -64,7 +76,8 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
         return mediaObjects.size();
     }
 
-    static class ViewHolderImage extends RecyclerView.ViewHolder implements View.OnClickListener{
+
+    static class ViewHolderImage extends RecyclerView.ViewHolder{
 
         public static ImageView img;
         public static CardView cardView;
@@ -72,15 +85,10 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
         public ViewHolderImage(@NonNull View itemView) {
             super(itemView);
 
-            itemView.setOnClickListener(this);
             img = itemView.findViewById(R.id.imageView);
             cardView = itemView.findViewById(R.id.cardView);
 
         }
 
-        @Override
-        public void onClick(View v) {
-            Toast.makeText(v.getContext(), String.valueOf(getAdapterPosition()), Toast.LENGTH_SHORT).show();
-        }
     }
 }
