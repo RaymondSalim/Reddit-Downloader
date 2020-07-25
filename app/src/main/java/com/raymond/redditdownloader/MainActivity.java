@@ -36,7 +36,6 @@ import java.util.LinkedList;
 
 
 public class MainActivity extends AppCompatActivity {
-    final Context context = this;
     final Fragment fragmentDownload = new DownloadsFragment();
     final Fragment fragmentHistory = new HistoryFragment();
     final Fragment fragmentSettings = new SettingsFragment();
