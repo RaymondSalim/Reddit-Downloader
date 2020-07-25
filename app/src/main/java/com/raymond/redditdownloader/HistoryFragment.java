@@ -2,12 +2,18 @@ package com.raymond.redditdownloader;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -33,14 +39,15 @@ public class HistoryFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        SharedPreferences sharedPreferences = this.getActivity().getSharedPreferences("history", Context.MODE_PRIVATE);
+
+
+
+        final SharedPreferences sharedPreferences = this.getActivity().getSharedPreferences("history", Context.MODE_PRIVATE);
         Gson gson = new Gson();
         String jsonText = sharedPreferences.getString("key", null);
         if (jsonText != null) {
             linkedList = gson.fromJson(jsonText, LinkedList.class);
         }
-
-
 
 
         // RecyclerView Initialize
@@ -54,5 +61,27 @@ public class HistoryFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
 
+        Toolbar toolbar = view.findViewById(R.id.toolbarHistory);
+        toolbar.inflateMenu(R.menu.history);
+        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                switch(item.getItemId()) {
+                    case (R.id.clearHistory):
+                        sharedPreferences.edit().remove("key").commit();
+                        linkedList.clear();
+                        mAdapter.notifyDataSetChanged();
+
+                        Toast.makeText(getContext(), "History deleted", Toast.LENGTH_SHORT).show();
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+        });
+
+
     }
+
 }
