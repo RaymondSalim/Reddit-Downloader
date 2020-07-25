@@ -2,6 +2,7 @@ package com.raymond.redditdownloader;
 
 import android.app.Dialog;
 import android.content.ContextWrapper;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -12,13 +13,18 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -45,19 +51,19 @@ public class DownloadsFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        final redditDownloader redditDownloader = new redditDownloader(((MainActivity)getContext()));
+        final redditDownloader redditDownloader = new redditDownloader(((MainActivity)getContext()), false);
 
-
+        Toolbar mToolbar = view.findViewById(R.id.toolbarDownloads);
+        ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
 
         imageDirList = prepareData();
-        Log.d("imDirList", String.valueOf(imageDirList.size()));
 
-        layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
-        recyclerView = view.findViewById(R.id.RecyclerViewImage);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(layoutManager);
-        mAdapter = new ImageRecyclerViewAdapter(getContext(), imageDirList);
-        recyclerView.setAdapter(mAdapter);
+            layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+            recyclerView = view.findViewById(R.id.RecyclerViewImage);
+            recyclerView.setHasFixedSize(true);
+            recyclerView.setLayoutManager(layoutManager);
+            mAdapter = new ImageRecyclerViewAdapter(getContext(), imageDirList);
+            recyclerView.setAdapter(mAdapter);
 
 
         // FAB
@@ -86,9 +92,27 @@ public class DownloadsFragment extends Fragment {
                 lp.width = WindowManager.LayoutParams.MATCH_PARENT;
                 lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
                 downloadDialog.getWindow().setAttributes(lp);
+
+                // Notifies the adapter that new media is inserted
+                downloadDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                    @Override
+                    public void onDismiss(DialogInterface dialog) {
+                        notifyAdapter();
+                    }
+                });
             }
         });
 
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Deletes and restarts the adapter so that file is removed from RecyclerView
+        // Used when media is deleted from MediaViewer activity
+        imageDirList = prepareData();
+        mAdapter = new ImageRecyclerViewAdapter(getContext(), imageDirList);
+        recyclerView.setAdapter(mAdapter);
     }
 
 
@@ -114,10 +138,12 @@ public class DownloadsFragment extends Fragment {
         File[] files = directory.listFiles();
 
         ArrayList mediaDirList = new ArrayList<>();
-        for (int i = 0; i < files.length; i++) {
-            MediaObjects mediaDir = new MediaObjects();
-            mediaDir.setMediaPath(files[i].getAbsolutePath());
-            mediaDirList.add(mediaDir);
+        if (files.length != 0) {
+            for (int i = 0; i < files.length; i++) {
+                MediaObjects mediaDir = new MediaObjects();
+                mediaDir.setMediaPath(files[i].getAbsolutePath());
+                mediaDirList.add(mediaDir);
+            }
         }
         return mediaDirList;
     }
@@ -125,5 +151,5 @@ public class DownloadsFragment extends Fragment {
     public void notifyAdapter() {
         mAdapter.notifyDataSetChanged();
     }
-
+    
 }
