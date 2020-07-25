@@ -7,4 +7,6 @@
     <color name="fabPlus">#FFFFFF</color>
     <color name="bottomNavBar">#FFFFFF</color>
     <color name="bottomNavBarSelected">#FF7043</color>
+    <color name="black_overlay">#66000000</color>
+
 </resources>
