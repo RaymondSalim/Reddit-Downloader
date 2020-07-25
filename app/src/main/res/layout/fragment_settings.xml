@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/custom_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:title="Settings"/>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Required ViewGroup for PreferenceFragmentCompat -->
+    <FrameLayout
+        android:id="@android:id/list_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:targetApi="n">
+
+    </FrameLayout>
+
+</LinearLayout>
