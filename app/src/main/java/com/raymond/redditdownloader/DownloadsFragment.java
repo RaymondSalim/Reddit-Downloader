@@ -151,5 +151,5 @@ public class DownloadsFragment extends Fragment {
     public void notifyAdapter() {
         mAdapter.notifyDataSetChanged();
     }
-    
+
 }
