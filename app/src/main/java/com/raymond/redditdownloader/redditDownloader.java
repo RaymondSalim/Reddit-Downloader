@@ -50,11 +50,11 @@ public class redditDownloader extends AppCompatActivity {
         this.context = context;
         appCompatActivity = (AppCompatActivity) context;
         isShare = bool;
-        if (!isShare) {
-            historyFragment = (HistoryFragment) ((MainActivity) appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentHistory");
-            downloadsFragment = (DownloadsFragment) ((MainActivity) appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentDownload");
-        }
 
+         if (!isShare) {
+            historyFragment = (HistoryFragment) (appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentHistory");
+            downloadsFragment = (DownloadsFragment) (appCompatActivity).getSupportFragmentManager().findFragmentByTag("fragmentDownload");
+        }
     }
 
     public redditDownloader() {
@@ -63,30 +63,78 @@ public class redditDownloader extends AppCompatActivity {
 
 
     public static File download(String urlInput) throws IOException, InterruptedException {
+        String fileName;
+
         if (isValid(urlInput)) {
 
             if (sendGET(urlInput)) {
-                String finalUrl = urlInput;
-                Log.d("yes", "download: yes");
+
                 try {
-
-                    if (isVideo(jsonData)) {
-                        String fallbackURL = fallbackGrab(children);
-                        String fileName = titleGrab(children);
-                        outputFile = downloadMedia(fallbackURL, fileName, isVideo);
-
+                    if (getDomain(jsonData).contains("giphy")) {
+                        // Media is hosted in giphy
 
                     } else {
-                        String url = urlGrab(children);
-                        String fileName = titleGrab(children);
+                        switch (getDomain(jsonData)) {
+                            // Media is a reddit video / gif
+                            case "v.redd.it":
+                                String redditFallbackURL = redditFallbackGrab(children);
+                                fileName = titleGrab(children);
+                                if (isGif(children)) {
+                                    outputFile = downloadMedia(redditFallbackURL, fileName, ".mp4");
+                                } else
+                                    outputFile = downloadMedia(redditFallbackURL, fileName, ".mp4");
+                                break;
 
-                        outputFile = downloadMedia(url, fileName, isVideo);
+                            // Gif is hosted on gfycat
+                            case "gfycat.com":
+                                String gfycatURL = getGfycatGiant(children);
+                                fileName = titleGrab(children);
+                                outputFile = downloadMedia(gfycatURL, fileName, ".mp4");
+                                break;
+
+                            // Media is a reddit image
+                            case "i.redd.it":
+                                String url = imageURLGrab(children);
+                                fileName = titleGrab(children);
+                                outputFile = downloadMedia(url, fileName, ".png");
+                                break;
+
+                            // Media is hosted in imgur
+                            case "i.imgur.com":
+                                String imgurURL = imageURLGrab(children);
+                                String extension;
+
+                                imgurURL = "https://" + imgurURL.substring(imgurURL.indexOf("i.imgur"));
+
+                                switch (imgurURL.substring(imgurURL.lastIndexOf("."))) {
+                                    case ".gif":
+                                        extension = ".gif";
+                                        break;
+                                    case ".gifv":
+                                        extension = ".mp4";
+                                        imgurURL = imgurURL.substring(0, imgurURL.lastIndexOf(".")) + ".mp4";
+                                        break;
+                                    case ".mp4":
+                                        extension = ".mp4";
+                                        break;
+                                    default:
+                                        extension = ".png";
+
+                                }
+
+                                fileName = titleGrab(children);
+                                outputFile = downloadMedia(imgurURL, fileName, extension);
+                                break;
+
+                        }
                     }
-                    addToHistory(finalUrl);
-                    addMedia(outputFile);
+
+                    addToHistory(urlInput);
 
                     if (!isShare) {
                         downloadsFragment.downloadDialog.dismiss();
+                        addMedia(outputFile);
+
                     }
                     return outputFile;
 
@@ -120,7 +168,7 @@ public class redditDownloader extends AppCompatActivity {
         return outputFile;
     }
 
-    public static boolean isValid(String url) throws MalformedURLException {
+    public static boolean isValid(String url) {
         String redditRegex = "https?://(www.)?\\b(reddit.com|redd.it)\\b\\b(/r/)\\b[-a-zA-Z0-9@:%._+~&?#/=]{1,512}";
         String urlRegex = "(https?://){1}[-a-zA-Z0-9@:%_+~&?#./=]{1,512}";
 
@@ -173,9 +221,7 @@ public class redditDownloader extends AppCompatActivity {
         }
     }
 
-    private static boolean sendGET(String url) throws IOException, InterruptedException {
-        boolean[] returnVal = new boolean[1];
-        returnVal[0] = false;
+    private static boolean sendGET(String url) throws IOException {
 
         // Checks if query exists in the url
         if (new URL(url).getQuery() != null) { url = removeQuery(url); }
@@ -198,7 +244,7 @@ public class redditDownloader extends AppCompatActivity {
     }
 
 
-    private static File downloadMedia(String url, String fileName, Boolean isVideo) throws IOException {
+    private static File downloadMedia(String url, String fileName, String extension) throws IOException {
         Request request = new Request.Builder()
                 .url(url)
                 .build();
@@ -207,12 +253,9 @@ public class redditDownloader extends AppCompatActivity {
         ContextWrapper contextWrapper = new ContextWrapper(context);
         File directory = contextWrapper.getExternalFilesDir(null);
 
-        if (isVideo) {
-            outputFile = new File(directory, fileName + ".mp4");
-
-        } else {
-            outputFile = new File(directory, fileName + ".png");
-        }
+        Log.d("TAG", "downloadMedia: " + directory);
+        outputFile = new File(directory, fileName + extension);
+        Log.d("TAG", "downloadMedia: " + extension);
 
 
         FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
@@ -230,6 +273,7 @@ public class redditDownloader extends AppCompatActivity {
         fileOutputStream.close();
         return outputFile;
     }
+
 
     private static void enableButton() {
         final Button button = downloadsFragment.downloadDialog.findViewById(R.id.downloadButton);
@@ -257,11 +301,11 @@ public class redditDownloader extends AppCompatActivity {
         return url.substring(0, url.indexOf("?"));
     }
 
-    private static String fallbackGrab(JSONArray children) throws JSONException {
+    private static String redditFallbackGrab(JSONArray children) throws JSONException {
         return children.getJSONObject(0).getJSONObject("data").getJSONObject("secure_media").getJSONObject("reddit_video").getString("fallback_url");
     }
 
-    private static String urlGrab (JSONArray children) throws JSONException {
+    private static String imageURLGrab(JSONArray children) throws JSONException {
         return children.getJSONObject(0).getJSONObject("data").getString("url_overridden_by_dest");
     }
 
@@ -281,22 +325,31 @@ public class redditDownloader extends AppCompatActivity {
     }
 
     public static void addToHistory(String url) {
+        LinkedList <String> linkedList = new LinkedList<>();
         SharedPreferences sharedPreferences = context.getSharedPreferences("history", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        url = url.substring(url.indexOf("/r/"), url.length());
+        url = url.substring(url.indexOf("/r/"));
+
         Gson gson = new Gson();
-        LinkedList<String> linkedList = historyFragment.linkedList;
+        String jsonText = sharedPreferences.getString("key", null);
+
+        if (jsonText != null) {
+            linkedList = gson.fromJson(jsonText, LinkedList.class);
+        }
 
         int mDataSize = linkedList.size();
         // Adds url to the list
         linkedList.addLast(url);
-        String jsonText = gson.toJson(linkedList);
+        jsonText = gson.toJson(linkedList);
         editor.putString("key", jsonText);
         editor.apply();
-        // Notify the adapter that the data has changed
-        historyFragment.recyclerView.getAdapter().notifyItemInserted(mDataSize);
-        // Scrolls to the bottom
-        historyFragment.recyclerView.smoothScrollToPosition(mDataSize);
+
+        if (!isShare) {
+            // Notify the adapter that the data has changed
+            historyFragment.recyclerView.getAdapter().notifyItemInserted(mDataSize);
+            // Scrolls to the bottom
+            historyFragment.recyclerView.smoothScrollToPosition(mDataSize);
+        }
 
     }
 
@@ -306,12 +359,22 @@ public class redditDownloader extends AppCompatActivity {
         downloadsFragment.imageDirList.add(mediaObjects);
     }
 
-    private static Boolean isVideo(String jsonData) throws JSONException {
+    private static String getDomain(String jsonData) throws JSONException {
         JSONArray mainArray = new JSONArray(jsonData);
         JSONArray children = mainArray.getJSONObject(0).getJSONObject("data").getJSONArray("children");
-        String booleanResult = children.getJSONObject(0).getJSONObject("data").getString("is_video");
-        isVideo = Boolean.parseBoolean(booleanResult);
-        return Boolean.parseBoolean(booleanResult);
+        return children.getJSONObject(0).getJSONObject("data").getString("domain");
+    }
+
+    private static String getGfycatGiant (JSONArray children) throws JSONException {
+        String url = children.getJSONObject(0).getJSONObject("data").getJSONObject("secure_media").getJSONObject("oembed").getString("thumbnail_url");
+        Log.d("TAG", url);
+        url = "https://giant." + url.substring(url.indexOf("gfycat.com"), url.indexOf("-size")) + ".mp4";
+        return url;
+    }
+    //, url.indexOf("-size_restricted")
+
+    private  static Boolean isGif (JSONArray children) throws JSONException {
+        return Boolean.valueOf(children.getJSONObject(0).getJSONObject("data").getJSONObject("secure_media").getJSONObject("reddit_video").getString("is_gif"));
     }
 }
 
