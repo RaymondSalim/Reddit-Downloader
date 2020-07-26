@@ -1,38 +1,20 @@
 package com.raymond.redditdownloader;
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.os.Bundle;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Looper;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.TextView;
-
-import java.io.IOException;
-import java.util.LinkedList;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -53,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         fm.beginTransaction().add(R.id.main_container, fragmentDownload, "fragmentDownload").commit();
         fm.beginTransaction().add(R.id.main_container, fragmentHistory, "fragmentHistory").hide(fragmentHistory).commit();
         fm.beginTransaction().add(R.id.main_container, fragmentSettings, "fragmentSettings").hide(fragmentSettings).commit();
-        fm.executePendingTransactions(); //
+        fm.executePendingTransactions();
 
 
         // Bottom Nav Bar
@@ -87,25 +69,45 @@ public class MainActivity extends AppCompatActivity {
                     active = fragmentSettings;
                     item.setChecked(true);
                     return true;
-                }
+            }
             return false;
         }
     };
 
-    private void setTheme(String themeSetting) {
-        View view = getWindow().getDecorView();
-        switch (themeSetting) {
-            case "auto":
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
-                break;
-            case "dark":
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                view.setSystemUiVisibility(0); // Resets icon color in status bar to default
-                break;
-            case "light":
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR); // Sets windowLightStatusBar = true
-                break;
+
+        public void setTheme(String themeSetting) {
+            View view = getWindow().getDecorView();
+            switch (themeSetting) {
+                case "auto":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                    break;
+                case "dark":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                    view.setSystemUiVisibility(0); // Resets icon color in status bar to default
+                    break;
+                case "light":
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                    view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); // Sets windowLightStatusBar = true
+                    break;
+            }
+
+            if (themeSetting.equalsIgnoreCase("auto")) {
+                int currentNightMode = getResources().getConfiguration().uiMode
+                        & Configuration.UI_MODE_NIGHT_MASK;
+
+                switch (currentNightMode) {
+                    case Configuration.UI_MODE_NIGHT_NO:
+                        // Night mode is not active, we're in day time
+                        view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR); // Sets windowLightStatusBar = true
+                        break;
+                    case Configuration.UI_MODE_NIGHT_YES:
+                        // Night mode is active, we're at night!
+                        view.setSystemUiVisibility(0); // Resets icon color in status bar to default
+                        break;
+                    case Configuration.UI_MODE_NIGHT_UNDEFINED:
+                        // We don't know what mode we're in, assume notnight
+                }
+            }
         }
-    }
-    }
+
+}
