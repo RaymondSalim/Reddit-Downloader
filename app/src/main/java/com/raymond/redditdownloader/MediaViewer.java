@@ -4,10 +4,8 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.FileProvider;
-import androidx.fragment.app.FragmentManager;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,19 +27,15 @@ import java.io.File;
 public class MediaViewer extends AppCompatActivity {
 
     private String filePath;
-    private int position;
-    private  DownloadsFragment downloadsFragment;
-    private Intent intent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media_viewer);
 
-        intent = getIntent();
+        Intent intent = getIntent();
         Bundle bundle = intent.getExtras();
         filePath = bundle.getString("filePath");
-        position = bundle.getInt("position");
 
         final Toolbar toolbar = findViewById(R.id.toolbarMedia);
 
@@ -54,36 +48,28 @@ public class MediaViewer extends AppCompatActivity {
         Log.d("filetype", fileType);
 
         toolbar.inflateMenu(R.menu.mediaviewer);
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-        toolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                File file = new File(filePath);
-                switch (item.getItemId()) {
-                    case (R.id.delete):
-                        // Deletes file
-                        file.delete();
+        toolbar.setNavigationOnClickListener(v -> finish());
+        toolbar.setOnMenuItemClickListener(item -> {
+            File file = new File(filePath);
+            switch (item.getItemId()) {
+                case (R.id.delete):
+                    // Deletes file
+                    file.delete();
 
-                        Toast.makeText(getApplicationContext(), "File deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "File deleted", Toast.LENGTH_SHORT).show();
 
-                        // Closes the activity
-                        finish();
-                        return true;
-                    case (R.id.share):
-                        Intent shareIntent = new Intent();
-                        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        shareIntent.setAction(Intent.ACTION_SEND);
-                        shareIntent.setType("image/* video/*");
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file));
-                        startActivity(Intent.createChooser(shareIntent, "Share Media"));
-                }
-                return false;
+                    // Closes the activity
+                    finish();
+                    return true;
+                case (R.id.share):
+                    Intent shareIntent = new Intent();
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.setType("image/* video/*");
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, FileProvider.getUriForFile(getApplicationContext(), getApplicationContext().getPackageName() + ".provider", file));
+                    startActivity(Intent.createChooser(shareIntent, "Share Media"));
             }
+            return false;
         });
 
         if (fileType.matches(".png|.jpg|.jpeg|.gif")) {

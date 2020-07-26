@@ -15,6 +15,8 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@color/colorStatusBar</item>
+        <item name="android:navigationBarColor">@color/colorStatusBar</item>
         <item name="preferenceTheme">@style/AppTheme.PreferenceThemeOverlay</item>
     </style>
 

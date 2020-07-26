@@ -23,15 +23,12 @@ public class ImageRecyclerViewAdapter extends RecyclerView.Adapter<ImageRecycler
     private LayoutInflater inflater;
     private ArrayList<MediaObjects> mediaObjects;
     private Context context;
-    private AppCompatActivity appCompatActivity;
-
 
 
     public ImageRecyclerViewAdapter(Context context, ArrayList<MediaObjects> mediaObjects) {
         this.context = context;
         this.inflater = LayoutInflater.from(context);
         this.mediaObjects = mediaObjects;
-        this.appCompatActivity = (AppCompatActivity) context;
 
     }
 

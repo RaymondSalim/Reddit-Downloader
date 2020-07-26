@@ -3,16 +3,17 @@ package com.raymond.redditdownloader;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
 
 public class ShareDownload extends AppCompatActivity {
     private File outputFile;
+    private redditDownloader downloader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,7 +22,8 @@ public class ShareDownload extends AppCompatActivity {
         Intent intent = getIntent();
         String action = intent.getAction();
         String type = intent.getType();
-        redditDownloader downloader = new redditDownloader(this, true);
+        downloader = new redditDownloader(this, true);
+
 
         if (Intent.ACTION_SEND.equals(action) && type != null) {
             if ("text/plain".equalsIgnoreCase(type)) {
@@ -54,7 +56,7 @@ public class ShareDownload extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        Log.d("TAG", "onDestroy: " + outputFile.getName());
 
         // To share file
         Intent shareIntent = new Intent();

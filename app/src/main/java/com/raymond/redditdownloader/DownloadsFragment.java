@@ -4,27 +4,21 @@ import android.app.Dialog;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -33,7 +27,6 @@ import java.util.ArrayList;
 
 public class DownloadsFragment extends Fragment {
     public Dialog downloadDialog;
-    private Thread download;
     private RecyclerView recyclerView;
     private ImageRecyclerViewAdapter mAdapter;
     public StaggeredGridLayoutManager layoutManager;
@@ -67,7 +60,7 @@ public class DownloadsFragment extends Fragment {
 
 
         // FAB
-        FloatingActionButton fab = view.findViewById(R.id.fab);
+        FloatingActionButton fab = view.findViewById(R.id.fab);;
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -118,7 +111,7 @@ public class DownloadsFragment extends Fragment {
 
     private void download(final String url) {
         // Runs on a thread to prevent error
-        download = new Thread(new Runnable() {
+        Thread download = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
