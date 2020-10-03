@@ -1,4 +1,4 @@
-package com.raymond.redditdownloader;
+package com.raymond.redditdownloader.history;
 
 import android.annotation.SuppressLint;
 import android.content.ClipData;
@@ -17,11 +17,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.raymond.redditdownloader.R;
+
 import java.util.LinkedList;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
-    private LinkedList<String> mDataString;
-    private LayoutInflater layoutInflater;
+    private final LinkedList<String> mDataString;
+    private final LayoutInflater layoutInflater;
 
 
     // data is passed into the constructor
@@ -29,9 +31,6 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         this.layoutInflater = LayoutInflater.from(context);
         this.mDataString = data;
     }
-
-
-
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {

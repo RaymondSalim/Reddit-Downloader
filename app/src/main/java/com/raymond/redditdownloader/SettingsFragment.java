@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.content.ContextCompat;
 import androidx.preference.Preference;
@@ -40,6 +41,8 @@ public class SettingsFragment extends PreferenceFragmentCompat {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 break;
         }
+        ((MainActivity)requireContext()).bottomNavigationView.setSelectedItemId(R.id.action_downloads);
+
     }
 
     @Override

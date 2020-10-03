@@ -1,8 +1,9 @@
-package com.raymond.redditdownloader;
+package com.raymond.redditdownloader.downloads;
 
 import android.app.Dialog;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +21,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.raymond.redditdownloader.MainActivity;
+import com.raymond.redditdownloader.MediaDownloader;
+import com.raymond.redditdownloader.MediaObjects;
+import com.raymond.redditdownloader.R;
+import com.raymond.redditdownloader.downloads.ImageRecyclerViewAdapter;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,23 +50,22 @@ public class DownloadsFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        final redditDownloader redditDownloader = new redditDownloader(((MainActivity)getContext()), false);
+        final MediaDownloader MediaDownloader = new MediaDownloader(getContext(), false);
 
         Toolbar mToolbar = view.findViewById(R.id.toolbarDownloads);
         ((AppCompatActivity)getActivity()).setSupportActionBar(mToolbar);
 
-        imageDirList = prepareData();
 
             layoutManager = new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
             recyclerView = view.findViewById(R.id.RecyclerViewImage);
             recyclerView.setHasFixedSize(true);
             recyclerView.setLayoutManager(layoutManager);
-            mAdapter = new ImageRecyclerViewAdapter(getContext(), imageDirList);
+            mAdapter = new ImageRecyclerViewAdapter(getContext());
             recyclerView.setAdapter(mAdapter);
 
 
         // FAB
-        FloatingActionButton fab = view.findViewById(R.id.fab);;
+        FloatingActionButton fab = view.findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -68,8 +73,8 @@ public class DownloadsFragment extends Fragment {
                 downloadDialog = new Dialog(getContext());
                 downloadDialog.setContentView(R.layout.downloadalertdialog);
                 downloadDialog.setTitle("Download");
-                final Button downloadButton = (Button) downloadDialog.findViewById(R.id.downloadButton);
-                final TextView url = (TextView) downloadDialog.findViewById(R.id.urlDownload);
+                final Button downloadButton = downloadDialog.findViewById(R.id.downloadButton);
+                final TextView url = downloadDialog.findViewById(R.id.urlDownload);
 
                 downloadButton.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -90,23 +95,31 @@ public class DownloadsFragment extends Fragment {
                 downloadDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                     @Override
                     public void onDismiss(DialogInterface dialog) {
-                        notifyAdapter();
+                        notifyAdapter(-2);
                     }
                 });
             }
         });
-
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        // Deletes and restarts the adapter so that file is removed from RecyclerView
-        // Used when media is deleted from MediaViewer activity
-        imageDirList = prepareData();
-        mAdapter = new ImageRecyclerViewAdapter(getContext(), imageDirList);
-        recyclerView.setAdapter(mAdapter);
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == AppCompatActivity.RESULT_OK) {
+            if (requestCode == 1) {
+                Log.d("TAG", "onActivityResult: called");
+                // Deletes and restarts the adapter so that file is removed from RecyclerView
+                // Used when media is deleted from MediaViewer activity
+//            imageDirList = prepareData();
+//            mAdapter = new ImageRecyclerViewAdapter(getContext());
+//            recyclerView.setAdapter(mAdapter);
+                int position = data.getIntExtra("position", -1);
+                notifyAdapter(position);
+            }
+        }
     }
+
 
 
     private void download(final String url) {
@@ -115,7 +128,7 @@ public class DownloadsFragment extends Fragment {
             @Override
             public void run() {
                 try {
-                    redditDownloader.download(url);
+                    MediaDownloader.download(url);
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -124,25 +137,13 @@ public class DownloadsFragment extends Fragment {
         download.start();
     }
 
-    private ArrayList prepareData() {
-        ContextWrapper contextWrapper = new ContextWrapper(getContext());
-        File directory = contextWrapper.getExternalFilesDir(null);
 
-        File[] files = directory.listFiles();
 
-        ArrayList mediaDirList = new ArrayList<>();
-        if (files.length != 0) {
-            for (int i = 0; i < files.length; i++) {
-                MediaObjects mediaDir = new MediaObjects();
-                mediaDir.setMediaPath(files[i].getAbsolutePath());
-                mediaDirList.add(mediaDir);
-            }
+    public void notifyAdapter(int position) {
+        if (position != -1) {
+            mAdapter.itemRemoved(position);
+            mAdapter.notifyItemRemoved(position);
         }
-        return mediaDirList;
-    }
-
-    public void notifyAdapter() {
-        mAdapter.notifyDataSetChanged();
     }
 
 }

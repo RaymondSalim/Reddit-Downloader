@@ -1,4 +1,4 @@
-package com.raymond.redditdownloader;
+package com.raymond.redditdownloader.share;
 
 import androidx.core.content.FileProvider;
 

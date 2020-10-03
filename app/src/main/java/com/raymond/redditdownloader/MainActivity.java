@@ -4,7 +4,16 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 
+import com.facebook.common.logging.FLog;
+import com.facebook.drawee.backends.pipeline.Fresco;
+import com.facebook.imagepipeline.core.ImagePipelineConfig;
+import com.facebook.imagepipeline.core.ImageTranscoderType;
+import com.facebook.imagepipeline.core.MemoryChunkType;
+import com.facebook.imagepipeline.listener.RequestListener;
+import com.facebook.imagepipeline.listener.RequestLoggingListener;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.raymond.redditdownloader.history.HistoryFragment;
+import com.raymond.redditdownloader.downloads.DownloadsFragment;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +25,9 @@ import androidx.preference.PreferenceManager;
 import android.view.MenuItem;
 import android.view.View;
 
+import java.util.HashSet;
+import java.util.Set;
+
 
 public class MainActivity extends AppCompatActivity {
     final Fragment fragmentDownload = new DownloadsFragment();
@@ -23,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     final Fragment fragmentSettings = new SettingsFragment();
     final FragmentManager fm = getSupportFragmentManager();
     Fragment active = fragmentDownload;
+    public String asdf;
+    public BottomNavigationView bottomNavigationView;
 
 
 
@@ -30,6 +44,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Fresco.initialize(getApplicationContext());
 
         // Fragments initialize
         fm.beginTransaction().add(R.id.main_container, fragmentDownload, "fragmentDownload").commit();
@@ -39,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Bottom Nav Bar
-        BottomNavigationView bottomNavigationView = (BottomNavigationView) findViewById(R.id.bottomNavBar);
+        bottomNavigationView = findViewById(R.id.bottomNavBar);
         bottomNavigationView.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
 
@@ -49,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         setTheme(themePref);
     }
 
-    private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
+    private final BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {

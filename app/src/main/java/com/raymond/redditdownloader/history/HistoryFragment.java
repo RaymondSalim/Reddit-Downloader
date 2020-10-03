@@ -1,4 +1,4 @@
-package com.raymond.redditdownloader;
+package com.raymond.redditdownloader.history;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.gson.Gson;
+import com.raymond.redditdownloader.R;
+import com.raymond.redditdownloader.history.RecyclerViewAdapter;
 
 import java.util.LinkedList;
 
@@ -37,7 +39,6 @@ public class HistoryFragment extends Fragment {
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
 
 
         final SharedPreferences sharedPreferences = this.getActivity().getSharedPreferences("history", Context.MODE_PRIVATE);
